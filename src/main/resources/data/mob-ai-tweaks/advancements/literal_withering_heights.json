@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:elytra"
+    },
+    "title": {
+      "translate": "advancements.mob-ai-tweaks.literal_withering_heights.title"
+    },
+    "description": {
+      "translate": "advancements.mob-ai-tweaks.literal_withering_heights.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "parent": "mob-ai-tweaks:decade_of_decay",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "player": {
+          "nbt": "{FallFlying:1b}"
+        },
+        "entity": {
+          "type": "minecraft:wither"
+        }
+      }
+    }
+  },
+  "rewards": {
+    "loot": [
+      "minecraft:blocks/netherite_block"
+    ],
+    "experience": 150
+  }
+}

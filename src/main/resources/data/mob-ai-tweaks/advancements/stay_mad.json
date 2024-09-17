@@ -1,0 +1,34 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:wither_skeleton_skull"
+    },
+    "title": {
+      "translate": "advancements.mob-ai-tweaks.stay_mad.title"
+    },
+    "description": {
+      "translate": "advancements.mob-ai-tweaks.stay_mad.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "parent": "mob-ai-tweaks:uh_oh_its_mad",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "nbt": "{IsEnraged:1b}"
+        }
+      }
+    }
+  },
+  "rewards": {
+    "loot": [
+      "minecraft:blocks/beacon"
+    ],
+    "experience": 250
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:skeleton_skull"
+    },
+    "title": {
+      "translate": "advancements.mob-ai-tweaks.uh_oh_its_mad.title"
+    },
+    "description": {
+      "translate": "advancements.mob-ai-tweaks.uh_oh_its_mad.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "parent": "minecraft:adventure/kill_a_mob",
+  "criteria": {
+    "hurt_enraged": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {
+        "entity": {
+          "nbt": "{IsEnraged:1b}"
+        }
+      }
+    },
+    "hurt_by_enraged": {
+      "trigger": "minecraft:entity_hurt_player",
+      "conditions": {
+        "damage": {
+          "source_entity": {
+            "nbt": "{IsEnraged:1b}"
+          }
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "hurt_enraged",
+      "hurt_by_enraged"
+    ]
+  ],
+  "rewards": {
+    "experience": 5
+  }
+}

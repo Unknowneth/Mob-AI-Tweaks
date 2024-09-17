@@ -1,0 +1,50 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:bell"
+    },
+    "title": {
+      "translate": "advancements.mob-ai-tweaks.tinnitus.title"
+    },
+    "description": {
+      "translate": "advancements.mob-ai-tweaks.tinnitus.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "minecraft:adventure/avoid_vibration",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:inverted",
+            "term": {
+              "condition": "minecraft:entity_properties",
+              "entity": "this",
+              "predicate": {
+                "nbt": "{StunTick:0}"
+              }
+            }
+          },
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:warden"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "loot": [
+      "minecraft:blocks/netherite_block"
+    ],
+    "experience": 150
+  }
+}
