@@ -1,0 +1,35 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:fire_charge"
+    },
+    "title": {
+      "translate": "advancement.mob-ai-tweaks.wombo_combo.title"
+    },
+    "description": {
+      "translate": "advancement.mob-ai-tweaks.wombo_combo.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "parent": "mob-ai-tweaks:i_cast_fire_charge",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "damage": {
+          "type": {
+            "direct_entity": {
+              "type": "minecraft:wind_charge"
+            }
+          }
+        },
+        "entity": {
+          "type": "minecraft:small_fireball"
+        }
+      }
+    }
+  }
+}

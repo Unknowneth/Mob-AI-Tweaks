@@ -1,0 +1,138 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:fire_charge",
+      "components": {
+        "minecraft:enchantment_glint_override": true
+      }
+    },
+    "title": {
+      "translate": "advancement.mob-ai-tweaks.didnt_ask_how_big_the_room_was.title"
+    },
+    "description": {
+      "translate": "advancement.mob-ai-tweaks.didnt_ask_how_big_the_room_was.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "mob-ai-tweaks:i_cast_fire_charge",
+  "criteria": {
+    "2": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 2b}"
+          }
+        }
+      }
+    },
+    "3": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 3b}"
+          }
+        }
+      }
+    },
+    "4": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 4b}"
+          }
+        }
+      }
+    },
+    "5": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 5b}"
+          }
+        }
+      }
+    },
+    "6": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 6b}"
+          }
+        }
+      }
+    },
+    "7": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 7b}"
+          }
+        }
+      }
+    },
+    "8": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 8b}"
+          }
+        }
+      }
+    },
+    "9": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 9b}"
+          }
+        }
+      }
+    },
+    "10": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "direct_entity": {
+            "type": "minecraft:fireball",
+            "nbt": "{ExplosionPower: 10b}"
+          }
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ]
+  ],
+  "rewards": {
+    "experience": 50
+  }
+}

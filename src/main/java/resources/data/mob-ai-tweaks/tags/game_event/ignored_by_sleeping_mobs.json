@@ -1,0 +1,7 @@
+{
+    "values": [
+        "minecraft:entity_dismount",
+        "minecraft:entity_mount",
+        "minecraft:entity_place"
+    ]
+}

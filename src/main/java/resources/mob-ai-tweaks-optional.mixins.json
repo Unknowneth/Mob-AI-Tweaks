@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "package": "com.notunanancyowen.mait.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DecayederMixin",
+    "DemonEyeSurroundTargetGoalMixin",
+    "EyeOfCthulhuMixin",
+    "SkeletonTrapMixin",
+    "SkeletronMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "values": [
+        "minecraft:villager",
+        {
+            "id": "guardvillagers:guard",
+            "required": false
+        },
+        "minecraft:iron_golem",
+        "minecraft:snow_golem"
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "replace": false,
+    "values": [
+        "minecraft:power",
+        "#minecraft:exclusive_set/damage",
+        "#minecraft:exclusive_set/crossbow",
+        "#mob-ai-tweaks:exclusive_set/blasting",
+        "#mob-ai-tweaks:exclusive_set/munition"
+    ]
+}

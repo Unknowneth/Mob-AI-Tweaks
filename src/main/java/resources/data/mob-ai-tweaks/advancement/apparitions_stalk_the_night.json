@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:phantom_membrane"
+    },
+    "title": {
+      "translate": "advancements.mob-ai-tweaks.apparitions_stalk_the_night.title"
+    },
+    "description": {
+      "translate": "advancements.mob-ai-tweaks.apparitions_stalk_the_night.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "parent": "minecraft:adventure/kill_a_mob",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:phantom",
+          "nbt": "{IsBoss:1b}"
+        }
+      }
+    }
+  },
+  "rewards": {
+    "experience": 150
+  }
+}

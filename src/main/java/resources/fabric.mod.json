@@ -1,0 +1,39 @@
+{
+	"schemaVersion": 1,
+	"id": "mob-ai-tweaks",
+	"version": "${version}",
+	"name": "Mob AI Tweaks",
+	"description": "Tweaks certain mob AIs and reworks the Wither and Ender Dragon",
+	"authors": [
+		"n0t_UN_Owen/NotUnaNancyOwen"
+	],
+	"contact": {
+		"homepage": "https://www.curseforge.com/minecraft/mc-mods/mob-ai-tweaks",
+		"sources": "https://github.com/Unknowneth/Mob-AI-Tweaks"
+	},
+	"license": "MIT, CC0-1.0",
+	"icon": "assets/mob-ai-tweaks/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+          "com.notunanancyowen.mait.MobAITweaks"
+		]
+	},
+	"mixins": [
+		"mob-ai-tweaks.mixins.json",
+		"mob-ai-tweaks-optional.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.1",
+		"minecraft": "~1.21",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"connector": "*",
+		"nyfsspiders": "*",
+		"explosiveenhancement": "*",
+		"take-back-the-night": "*",
+		"confluence": "*"
+	}
+}

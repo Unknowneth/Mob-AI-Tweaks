@@ -1,0 +1,21 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.grappling_bobber"
+  },
+  "supported_items": "#minecraft:enchantable/fishing",
+  "exclusive_set": "#mob-ai-tweaks:exclusive_set/fishing",
+  "weight": 1,
+  "max_level": 1,
+  "min_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 5,
+  "slots": [
+    "hand"
+  ]
+}

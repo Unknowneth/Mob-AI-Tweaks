@@ -1,0 +1,77 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.kick_back"
+  },
+  "supported_items": "#minecraft:enchantable/trident",
+  "weight": 1,
+  "max_level": 1,
+  "min_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 5,
+  "slots": [
+    "mainhand"
+  ],
+  "effects": {
+    "minecraft:post_attack": [
+      {
+        "affected": "attacker",
+        "effect": {
+          "type": "minecraft:all_of",
+          "effects": [
+            {
+              "type": "minecraft:spawn_particles",
+              "particle": {
+                "type": "minecraft:bubble_pop"
+              },
+              "horizontal_position": {
+                "type": "entity_position"
+              },
+              "vertical_position": {
+                "type": "entity_position"
+              },
+              "horizontal_velocity": {
+                "base": 1,
+                "movement_scale": 1
+              },
+              "vertical_velocity": {
+                "base": 1,
+                "movement_scale": 1
+              },
+              "speed": 1
+            },
+            {
+              "type": "minecraft:explode",
+              "block_interaction": "none",
+              "knockback_multiplier": 1,
+              "large_particle": {
+                "type": "minecraft:bubble_pop"
+              },
+              "radius": 3.5,
+              "small_particle": {
+                "type": "minecraft:bubble_pop"
+              },
+              "sound": "minecraft:ambient.underwater.exit"
+            }
+          ]
+        },
+        "requirements": {
+          "condition": "minecraft:entity_properties",
+          "entity": "attacker",
+          "predicate": {
+            "flags": {
+              "is_on_ground": false,
+              "is_flying": false
+            }
+          }
+        },
+        "enchanted": "attacker"
+      }
+    ]
+  }
+}

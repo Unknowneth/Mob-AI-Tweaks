@@ -1,0 +1,8 @@
+{
+    "replace": false,
+    "values": [
+        "minecraft:luck_of_the_sea",
+        "minecraft:lure",
+        "mob-ai-tweaks:grappling_bobber"
+    ]
+}

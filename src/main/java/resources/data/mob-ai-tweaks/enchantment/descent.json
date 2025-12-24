@@ -1,0 +1,41 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.descent"
+  },
+  "supported_items": "minecraft:elytra",
+  "weight": 1,
+  "max_level": 1,
+  "min_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 10,
+  "slots": [
+    "armor"
+  ],
+  "effects": {
+    "minecraft:tick": [
+      {
+        "requirements": {
+          "condition": "minecraft:entity_properties",
+          "entity": "this",
+          "predicate": {
+            "nbt": "{FallFlying:1b}"
+          }
+        },
+        "effect": {
+          "type": "minecraft:apply_mob_effect",
+          "to_apply": "minecraft:slow_falling",
+          "min_duration": 1,
+          "max_duration": 1,
+          "min_amplifier": 0,
+          "max_amplifier": 0
+        }
+      }
+    ]
+  }
+}

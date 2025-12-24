@@ -1,0 +1,49 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.featherweight_munitions"
+  },
+  "supported_items": "#minecraft:enchantable/crossbow",
+  "exclusive_set": "#mob-ai-tweaks:exclusive_set/munition",
+  "weight": 1,
+  "max_level": 1,
+  "min_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 100,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 5,
+  "slots": [
+    "hand"
+  ],
+  "effects": {
+    "minecraft:projectile_spawned": [
+      {
+        "affected": "this",
+        "effect": {
+          "type": "minecraft:spawn_particles",
+          "particle": {
+            "type": "minecraft:crit"
+          },
+          "horizontal_position": {
+            "type": "in_bounding_box"
+          },
+          "vertical_position": {
+            "type": "in_bounding_box"
+          },
+          "horizontal_velocity": {
+            "base": 1,
+            "movement_scale": 0.5
+          },
+          "vertical_velocity": {
+            "base": 1,
+            "movement_scale": 0.5
+          },
+          "speed": 1
+        }
+      }
+    ]
+  }
+}

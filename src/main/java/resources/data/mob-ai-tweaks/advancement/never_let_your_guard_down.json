@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:sponge"
+    },
+    "title": {
+      "translate": "advancement.mob-ai-tweaks.never_let_your_guard_down.title"
+    },
+    "description": {
+      "translate": "advancement.mob-ai-tweaks.never_let_your_guard_down.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "mob-ai-tweaks:prison_of_elders",
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:elder_guardian"
+        }
+      }
+    }
+  },
+  "rewards": {
+    "experience": 150
+  }
+}

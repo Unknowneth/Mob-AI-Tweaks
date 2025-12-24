@@ -1,0 +1,52 @@
+{
+    "values": [
+        {
+            "id": "bows:stone_bow",
+            "required": false
+        },
+        {
+            "id": "bows:copper_bow",
+            "required": false
+        },
+        {
+            "id": "bows:iron_bow",
+            "required": false
+        },
+        {
+            "id": "bows:golden_bow",
+            "required": false
+        },
+        {
+            "id": "bows:diamond_bow",
+            "required": false
+        },
+        {
+            "id": "bows:netherite_bow",
+            "required": false
+        },
+        {
+            "id": "bows:stone_crossbow",
+            "required": false
+        },
+        {
+            "id": "bows:copper_crossbow",
+            "required": false
+        },
+        {
+            "id": "bows:iron_crossbow",
+            "required": false
+        },
+        {
+            "id": "bows:golden_crossbow",
+            "required": false
+        },
+        {
+            "id": "bows:diamond_crossbow",
+            "required": false
+        },
+        {
+            "id": "bows:netherite_crossbow",
+            "required": false
+        }
+    ]
+}

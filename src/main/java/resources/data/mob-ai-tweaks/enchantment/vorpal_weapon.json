@@ -1,0 +1,68 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.vorpal_weapon"
+  },
+  "supported_items": "#mob-ai-tweaks:vorpal",
+  "exclusive_set": "#mob-ai-tweaks:exclusive_set/vorpal",
+  "weight": 1,
+  "max_level": 5,
+  "min_cost": {
+    "base": 50,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 5,
+  "slots": [
+    "hand"
+  ],
+  "effects": {
+    "minecraft:damage": [
+      {
+        "effect": {
+          "type": "minecraft:add",
+          "value": {
+            "type": "minecraft:linear",
+            "base": 1.5,
+            "per_level_above_first": 1.5
+          }
+        },
+        "requirements": {
+          "condition": "minecraft:any_of",
+          "terms": [
+            {
+              "condition": "minecraft:entity_properties",
+              "entity": "this",
+              "predicate": {
+                "type": "#c:bosses"
+              }
+            },
+            {
+              "condition": "minecraft:entity_properties",
+              "entity": "this",
+              "predicate": {
+                "type": "#mob-ai-tweaks:bosses_that_announce_death"
+              }
+            },
+            {
+              "condition": "minecraft:entity_properties",
+              "entity": "this",
+              "predicate": {
+                "type": "#mob-ai-tweaks:bosses_that_announce_spawn"
+              }
+            },
+            {
+              "condition": "minecraft:entity_properties",
+              "entity": "this",
+              "predicate": {
+                "nbt": "{IsBoss:1b}"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

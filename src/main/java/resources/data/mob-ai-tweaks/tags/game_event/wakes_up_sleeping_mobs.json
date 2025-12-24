@@ -1,0 +1,23 @@
+{
+    "values": [
+        "minecraft:block_activate",
+        "minecraft:block_attach",
+        "minecraft:block_change",
+        "minecraft:block_close",
+        "minecraft:block_deactivate",
+        "minecraft:block_destroy",
+        "minecraft:block_detach",
+        "minecraft:container_open",
+        "minecraft:container_close",
+        "minecraft:entity_damage",
+        "minecraft:entity_die",
+        "minecraft:explode",
+        "minecraft:hit_ground",
+        "minecraft:instrument_play",
+        "minecraft:jukebox_play",
+        "minecraft:lightning_strike",
+        "minecraft:note_block_play",
+        "minecraft:projectile_land",
+        "minecraft:splash"
+    ]
+}

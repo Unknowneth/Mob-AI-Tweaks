@@ -1,0 +1,78 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.blasting_impression"
+  },
+  "supported_items": "#mob-ai-tweaks:ranged_weapons",
+  "exclusive_set": "#mob-ai-tweaks:exclusive_set/blasting",
+  "weight": 1,
+  "max_level": 3,
+  "max_cost": {
+    "base": 65,
+    "per_level_above_first": 9
+  },
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 9
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "hand"
+  ],
+  "effects": {
+    "minecraft:post_attack": [
+      {
+        "requirements": {
+          "condition": "minecraft:damage_source_properties",
+          "predicate": {
+            "is_direct": false
+          }
+        },
+        "effect": {
+          "type": "minecraft:all_of",
+          "effects": [
+            {
+              "type": "minecraft:explode",
+              "damage_type": "minecraft:player_explosion",
+              "knockback_multiplier": {
+                "type": "minecraft:linear",
+                "base": 1,
+                "per_level_above_first": 0.1
+              },
+              "radius": {
+                "type": "minecraft:linear",
+                "base": 0.5,
+                "per_level_above_first": 0.5
+              },
+              "block_interaction": "none",
+              "small_particle": {
+                "type": "minecraft:gust_emitter_small"
+              },
+              "large_particle": {
+                "type": "minecraft:gust_emitter_large"
+              },
+              "sound": "minecraft:entity.wind_charge.wind_burst"
+            },
+            {
+              "type": "minecraft:apply_mob_effect",
+              "to_apply": "minecraft:wind_charged",
+              "min_duration": 20,
+              "max_duration": 20,
+              "min_amplifier": {
+                "type": "minecraft:linear",
+                "base": 0,
+                "per_level_above_first": 1
+              },
+              "max_amplifier": {
+                "type": "minecraft:linear",
+                "base": 0,
+                "per_level_above_first": 1
+              }
+            }
+          ]
+        },
+        "enchanted": "attacker",
+        "affected": "victim"
+      }
+    ]
+  }
+}

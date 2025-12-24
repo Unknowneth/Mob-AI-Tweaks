@@ -1,0 +1,20 @@
+{
+  "description": {
+    "translate": "enchantment.mob-ai-tweaks.perfect_parry"
+  },
+  "supported_items": "#c:tools/shield",
+  "weight": 1,
+  "max_level": 4,
+  "max_cost": {
+    "base": 65,
+    "per_level_above_first": 9
+  },
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 9
+  },
+  "anvil_cost": 5,
+  "slots": [
+    "hand"
+  ]
+}
