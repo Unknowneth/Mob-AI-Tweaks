@@ -1,5 +1,7 @@
 Everything you need to see is in the corresponding version .zip file
 
+Alternatively, you canm visit branches of each version.
+
 Free to use code as long as you don't steal everything
 
 Note: I don't always upload my source code. I only do that when I experience critical situations like my PC failing (saying this as of 1.9.2-4 for 1.20.1, 1.21 and 1.21.10 respectively)
