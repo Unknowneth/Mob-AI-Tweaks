@@ -4,6 +4,8 @@ import com.notunanancyowen.mait.MobAITweaks;
 import com.notunanancyowen.mait.dataholders.SpecialAttacksInterface;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -79,7 +81,11 @@ public abstract class WitherSkullEntityMixin extends ExplosiveProjectileEntity {
     }
     @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;Lnet/minecraft/entity/Entity;)Z"), cancellable = true)
     private void suppressWitherEffect(EntityHitResult entityHitResult, CallbackInfo ci) {
-        if(getOwner() instanceof SpecialAttacksInterface s && s.attackType().equals("GRENADE")) ci.cancel();
+        if(getOwner() instanceof SpecialAttacksInterface s && s.attackType().equals("GRENADE")) {
+            int i = MobAITweaks.getModConfigValue("wither_skeleton_special_attack_wither_duration", 0);
+            if(i > 0 && entityHitResult.getEntity() instanceof LivingEntity l) l.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 20 * i, MobAITweaks.getModConfigValue("wither_skeleton_special_attack_wither_strength", 0)), getEffectCause());
+            ci.cancel();
+        }
     }
     @ModifyArg(method = "onCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/World$ExplosionSourceType;)Lnet/minecraft/world/explosion/Explosion;"), index = 6)
     private World.ExplosionSourceType suppressGriefing(World.ExplosionSourceType explosionSourceType) {
