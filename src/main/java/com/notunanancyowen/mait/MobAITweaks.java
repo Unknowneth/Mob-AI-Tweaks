@@ -1,27 +1,51 @@
 package com.notunanancyowen.mait;
 
+import com.mojang.serialization.Codec;
 import com.notunanancyowen.mait.commands.*;
+import com.notunanancyowen.mait.dataholders.SpecialAttacksInterface;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
+import net.fabricmc.fabric.api.item.v1.EnchantmentEvents;
 import net.fabricmc.fabric.api.registry.FabricBrewingRecipeRegistryBuilder;
+import net.fabricmc.fabric.api.util.TriState;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.component.ComponentType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.ShulkerEntity;
+import net.minecraft.entity.mob.SlimeEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.FireballEntity;
+import net.minecraft.entity.projectile.SmallFireballEntity;
 import net.minecraft.item.*;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.stat.Stats;
+import net.minecraft.util.*;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.event.GameEvent;
@@ -31,6 +55,8 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 @SuppressWarnings("all")
 public class MobAITweaks implements ModInitializer {
@@ -55,7 +81,116 @@ public class MobAITweaks implements ModInitializer {
 	public static final TagKey<GameEvent> WAKES_UP_SLEEPING_MOBS = TagKey.of(RegistryKeys.GAME_EVENT, Identifier.of(MOD_ID, "wakes_up_sleeping_mobs"));
 	public static final RegistryEntry<Potion> BLINDNESS = Registry.registerReference(Registries.POTION, Identifier.of(MOD_ID, "blindness"), new Potion("blindness", new StatusEffectInstance(StatusEffects.BLINDNESS, 500)));
 	public static final RegistryEntry<Potion> LONG_BLINDNESS = Registry.registerReference(Registries.POTION, Identifier.of(MOD_ID, "long_blindness"), new Potion("blindness", new StatusEffectInstance(StatusEffects.BLINDNESS, 1000)));
+	public static final ComponentType<Integer> AUTO_RELOAD_TIME = registerComponent("auto_reload_time", builder -> builder.codec(Codec.INT).packetCodec(PacketCodecs.VAR_INT));
+	public static final ComponentType<Unit> IGNORES_WATER = registerComponent("ignores_water", builder -> builder.codec(Unit.CODEC));
+	private static <T> ComponentType<T> registerComponent(String string, UnaryOperator<ComponentType.Builder<T>> unaryOperator) {
+		return Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of(MOD_ID, string), ((ComponentType.Builder)unaryOperator.apply(ComponentType.builder())).build());
+	}
 	@Override public void onInitialize() {
+		EnchantmentEvents.ALLOW_ENCHANTING.register((enchantment, target, context) -> {
+			if(enchantment.getIdAsString().startsWith(MOD_ID) && !MobAITweaks.getModConfigValue("enchantments_from_mod")) return TriState.FALSE;
+			return TriState.DEFAULT;
+		});
+		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+			if(!MobAITweaks.getModConfigValue("enchantments_from_mod")) {
+				stack.getOrDefault(DataComponentTypes.STORED_ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT).getEnchantments().stream().filter(e -> e.getIdAsString().contains(MOD_ID)).forEach(e -> {
+					for(int i = e.value().getMinLevel(); i <= e.value().getMaxLevel(); i++) {
+						int j = lines.indexOf(e.value().getName(e, i));
+						if(j != -1) lines.set(j, lines.get(j).copy().formatted(Formatting.STRIKETHROUGH).formatted(Formatting.DARK_GRAY));
+					}
+				});
+				stack.getEnchantments().getEnchantments().stream().filter(e -> e.getIdAsString().contains(MOD_ID)).forEach(e -> {
+					for(int i = e.value().getMinLevel(); i <= e.value().getMaxLevel(); i++) {
+						int j = lines.indexOf(e.value().getName(e, i));
+						if(j != -1) lines.set(j, lines.get(j).copy().formatted(Formatting.STRIKETHROUGH).formatted(Formatting.DARK_GRAY));
+					}
+				});
+			}
+		});
+		UseItemCallback.EVENT.register((user, world, hand) -> {
+			boolean enchantsEnabled = MobAITweaks.getModConfigValue("enchantments_from_mod");
+			ItemStack currentItem = user.getStackInHand(hand);
+			if(user.getItemCooldownManager().isCoolingDown(currentItem.getItem()) || user.isSpectator()) return TypedActionResult.fail(currentItem);
+			if(currentItem.getUseAction() == UseAction.NONE && enchantsEnabled) {
+				if(currentItem.getEnchantments().getEnchantments().stream().noneMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "after_burner")))) return TypedActionResult.pass(currentItem);
+				var afterBurner = currentItem.getEnchantments().getEnchantments().stream().filter(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "after_burner"))).findFirst();
+				int afterBurnerLvl = 0;
+				if(afterBurner.isPresent()) afterBurnerLvl = currentItem.getEnchantments().getLevel(afterBurner.get()) - 1;
+				world.playSound(user, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_BLAZE_SHOOT, SoundCategory.PLAYERS, 0.5f, world.getRandom().nextFloat() * 0.4f + 0.8f);
+				if(!world.isClient()) {
+					if(afterBurnerLvl > 0) {
+						FireballEntity fireball = new FireballEntity(world, user, user.getRotationVector(), afterBurnerLvl);
+						fireball.setPosition(user.getEyePos());
+						ItemStack item = Items.FIRE_CHARGE.getDefaultStack();
+						item.addEnchantment(afterBurner.get(), afterBurnerLvl + 1);
+						fireball.setItem(item);
+						world.spawnEntity(fireball);
+					}
+					else {
+						SmallFireballEntity smallFireball = new SmallFireballEntity(world, user.getX(), user.getEyeY(), user.getZ(), user.getRotationVector());
+						smallFireball.setOwner(user);
+						ItemStack item = Items.FIRE_CHARGE.getDefaultStack();
+						afterBurner.ifPresent(e -> item.addEnchantment(e, 1));
+						smallFireball.setItem(item);
+						world.spawnEntity(smallFireball);
+					}
+					if(!user.getAbilities().creativeMode) currentItem.damage(1, user, LivingEntity.getSlotForHand(hand));
+				}
+				user.getItemCooldownManager().set(currentItem.getItem(), 10 + afterBurnerLvl * 2);
+				user.incrementStat(Stats.USED.getOrCreateStat(currentItem.getItem()));
+				return TypedActionResult.success(currentItem, world.isClient());
+			}
+			if(MobAITweaks.getModConfigValue("throwable_fire_charges") && currentItem.getItem() instanceof FireChargeItem f) {
+				world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.5f, world.getRandom().nextFloat() * 0.4f + 0.8f);
+				if(!world.isClient()) {
+					SmallFireballEntity smallFireball = new SmallFireballEntity(world, user.getX(), user.getEyeY(), user.getZ(), user.getRotationVector());
+					smallFireball.setPosition(user.getEyePos());
+					smallFireball.setItem(currentItem);
+					world.spawnEntity(smallFireball);
+				}
+				user.incrementStat(Stats.USED.getOrCreateStat(f));
+				if(!user.getAbilities().creativeMode) currentItem.decrement(1);
+				return TypedActionResult.success(currentItem, world.isClient());
+			}
+			if((currentItem.getItem() instanceof CompassItem || currentItem.isIn(ItemTags.COMPASSES)) && enchantsEnabled) {
+				if(currentItem.getEnchantments().getEnchantments().stream().noneMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "recall")))) return TypedActionResult.pass(currentItem);
+				if(user instanceof ServerPlayerEntity player) if(player.getServer() != null && player.getSpawnPointPosition() != null) player.teleport(player.getServer().getWorld(player.getSpawnPointDimension()), player.getSpawnPointPosition().getX(), player.getSpawnPointPosition().getY(), player.getSpawnPointPosition().getZ(), player.getSpawnAngle(), 0F);
+				return TypedActionResult.success(currentItem, world.isClient());
+			}
+			if(currentItem.get(DataComponentTypes.INSTRUMENT) != null && MobAITweaks.getModConfigValue("goat_horns_draw_aggro")) world.getEntitiesByClass(HostileEntity.class, user.getBoundingBox().expand(128), h -> ((h.getTarget() instanceof PlayerEntity p && !p.getUuid().equals(user.getUuid())) || h.getTarget() == null) && h.canTarget(user)).forEach(h -> h.setTarget(user));
+			return TypedActionResult.pass(currentItem);
+		});
+		UseEntityCallback.EVENT.register((user, world, hand, entity, hitResult) -> {
+			if(entity instanceof ShulkerEntity s) {
+				if(MobAITweaks.getModConfigValue("shulkers_are_breedable") && user.getStackInHand(hand).isIn(MobAITweaks.SHULKER_BREEDING_ITEMS)) {
+					if(s instanceof SpecialAttacksInterface a) a.forceSpecialAttack();
+					if(!s.getWorld().isClient() && !user.isCreative()) user.getStackInHand(hand).decrement(1);
+					int healAmount = MobAITweaks.getModConfigValue("shulker_breed_heal_amount", 10);
+					s.heal(healAmount);
+					if(s.getWorld() instanceof ServerWorld server) {
+						server.spawnParticles(ParticleTypes.END_ROD, s.getX(), s.getY(), s.getZ(), healAmount, 0.1, 0.1, 0.1, 0.1);
+						user.swingHand(hand, true);
+					}
+					return ActionResult.success(s.getWorld().isClient());
+				}
+				if(MobAITweaks.getModConfigValue("shulkers_are_dyeable") && user.getStackInHand(hand).getItem() instanceof DyeItem dye) {
+					if(dye.getColor().equals(s.getColor())) return ActionResult.PASS;
+					s.setVariant(Optional.of(dye.getColor()));
+					if(!s.getWorld().isClient()) if(!user.isCreative()) {
+						user.getStackInHand(hand).decrement(1);
+						user.swingHand(hand, true);
+					}
+					return ActionResult.success(s.getWorld().isClient());
+				}
+			}
+			if(entity instanceof SlimeEntity s && MobAITweaks.getModConfigValue("slimes_can_be_made_of_honey") && s.isSmall() && s.getOffHandStack().isOf(Items.HONEY_BLOCK) && user.getStackInHand(hand).isOf(Items.GLASS_BOTTLE)) {
+				user.setStackInHand(hand, ItemUsage.exchangeStack(user.getStackInHand(hand), user, Items.HONEY_BOTTLE.getDefaultStack()));
+				entity.discard();
+				if(!entity.getWorld().isClient()) user.swingHand(hand, true);
+				return ActionResult.success(!entity.getWorld().isClient());
+			}
+			return ActionResult.PASS;
+		});
 		FabricBrewingRecipeRegistryBuilder.BUILD.register(builder -> {
 			builder.registerPotionRecipe(BLINDNESS, Items.REDSTONE, LONG_BLINDNESS);
 			builder.registerPotionRecipe(BLINDNESS, Items.FERMENTED_SPIDER_EYE, Potions.INVISIBILITY);
@@ -278,6 +413,10 @@ public class MobAITweaks implements ModInitializer {
 		String originalConfig = "#All cooldowns and durations are in ticks (20 ticks is 1 second), chances are in multiplied percentage (50 * 15% is 7.5), boosts are in added percentage (200% means 3x more, -100% means zero), and local difficulty is in percentage (250% means 2.5 local difficulty)\n" +
 			"allay_rework=true\n" +
 			"animals_can_be_fed_chorus_fruit=true\n" +
+			"animals_can_be_groomed_with_brushes=true\n" +
+			"animals_drop_item_when_groomed_chance=10\n" +
+			"animals_panic_in_groups=true\n" +
+			"animals_panic_spread_radius=16\n" +
 			"blaze_attack_rework=true\n" +
 			"blaze_fireball_count_easy=2\n" +
 			"blaze_fireball_count_normal=3\n" +
@@ -307,6 +446,7 @@ public class MobAITweaks implements ModInitializer {
 			"ender_dragon_crystal_threshold_hard=4\n" +
 			"ender_dragon_healing_rework=true\n" +
 			"ender_dragon_rework=true\n" +
+			"ender_dragon_announcements=true\n" +
 			"enderman_rework=true\n" +
 			"enderman_rework_attack_animation=true\n" +
 			"elder_guardians_are_bosses=true\n" +
@@ -324,6 +464,7 @@ public class MobAITweaks implements ModInitializer {
 			"ghasts_cry_tears=true\n" +
 			"ghasts_cry_tears_cooldown=60\n" +
 			"goat_horns_draw_aggro=true\n" +
+			"guardians_can_be_stunned=true\n" +
 			"hostile_mobs_can_escape_boats=true\n" +
 			"hostile_mobs_can_sit=true\n" +
 			"hostile_mobs_sitting_can_be_startled=true\n" +
@@ -334,6 +475,7 @@ public class MobAITweaks implements ModInitializer {
 			"illagers_and_normal_zombies_fight=true\n" +
 			"illagers_and_zombie_villagers_fight=true\n" +
 			"illagers_and_zombies_prioritize_player=true\n" +
+			"illagers_flee_from_exploding_creepers=true\n" +
 			"illagers_use_boats=true\n" +
 			"illusioner_rework=true\n" +
 			"illusioner_bad_omen_spawn_chance=5\n" +
@@ -381,9 +523,17 @@ public class MobAITweaks implements ModInitializer {
 			"skeleton_special_attack_cooldown=200\n" +
 			"skeleton_strafe_speed_buff=true\n" +
 			"skeleton_switch_to_melee_range=0\n" +
+			"skeletons_avoid_shooting_at_the_same_time=true\n" +
 			"skeletons_can_convert_to_wither=true\n" +
+			"skeletons_can_shoot_crit_arrows=true\n" +
 			"skeletons_swing_off_hand_on_draw=true\n" +
 			"skeletons_use_modded_bows=true\n" +
+			"slime_merge_chance=1\n" +
+			"slimes_can_be_made_of_honey=true\n" +
+			"slimes_death_animation=true\n" +
+			"slimes_turn_into_magma_cubes_in_lava=true\n" +
+			"slimes_with_dispenser_chance=20\n" +
+			"slimes_with_dispenser_local_difficulty=150\n" +
 			"sneak_to_approach_animals=true\n" +
 			"sniffer_announces_biome_find=true\n" +
 			"sniffer_announces_block_find=true\n" +
@@ -400,19 +550,29 @@ public class MobAITweaks implements ModInitializer {
 			"glow_squid_night_vision_on_stare_duration=600\n" +
 			"stray_special_attacks=true\n" +
 			"stray_special_attack_cooldown=120\n" +
+			"striders_can_be_ridden_temporarily_when_fed=true\n" +
 			"tamed_mobs_regen_amount=1\n" +
 			"tamed_mobs_regen_cooldown=20\n" +
 			"throwable_fire_charges=true\n" +
+			"turtle_helmet_are_hard_hats=true\n" +
 			"undead_horses_burn_in_day=true\n" +
 			"vex_rework=true\n" +
 			"vex_charge_attack_min_distance=4\n" +
 			"vex_projectile_damage_boost=200\n" +
+			"villagers_can_fish=true\n" +
 			"villagers_eat_food=true\n" +
 			"villagers_have_special_roles=true\n" +
 			"villagers_max_special_services=12\n" +
 			"villagers_announce_special_services=true\n" +
+			"vindicator_rework=true\n" +
+			"vindicator_rework_melee_movement_speed_boost=0\n" +
+			"vindicator_hits_needed_to_back_off=3\n" +
+			"vindicator_back_off_max_duration=120\n" +
+			"vindicator_sprint_on_back_off_duration=20\n" +
+			"vindicator_sprint_after_back_off_duration=40\n" +
 			"wandering_traders_blind_attackers=true\n" +
 			"wardens_get_stunned_by_bells=true\n" +
+			"wardens_have_health_bars=true\n" +
 			"witches_drink_jump_boost=true\n" +
 			"witches_show_potion_before_throwing_it=true\n" +
 			"wither_death_animation=true\n" +
@@ -423,8 +583,11 @@ public class MobAITweaks implements ModInitializer {
 			"wither_boss_drops_netherite=true\n" +
 			"wither_skeleton_special_attacks=true\n" +
 			"wither_skeleton_special_attack_cooldown=200\n" +
+			"wither_skeleton_special_attack_wither_duration=0\n" +
+			"wither_skeleton_special_attack_wither_strength=0\n" +
 			"wither_skeletons_with_bows_chance=10\n" +
 			"wither_skeletons_with_bows_local_difficulty=250\n" +
+			"wolves_flee_from_exploding_creepers=true\n" +
 			"zombie_dads_from_bedrock=true\n" +
 			"zombie_dads_spawn_chance=1\n" +
 			"zombie_dads_spawn_local_difficulty=150\n" +
