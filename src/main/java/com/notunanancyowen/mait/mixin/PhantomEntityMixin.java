@@ -56,7 +56,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Comparator;
 import java.util.List;
 
-@Mixin(PhantomEntity.class)
+@Mixin(value = PhantomEntity.class, priority = 1001)
 public abstract class PhantomEntityMixin extends FlyingEntity implements Monster {
     @Unique private static final TrackedData<Boolean> FROM_SPAWNER = DataTracker.registerData(PhantomEntityMixin.class, TrackedDataHandlerRegistry.BOOLEAN);
     @Unique private static final TrackedData<Boolean> BOSS = DataTracker.registerData(PhantomEntityMixin.class, TrackedDataHandlerRegistry.BOOLEAN);
