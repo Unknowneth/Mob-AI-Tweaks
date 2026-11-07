@@ -157,7 +157,7 @@ public class VillagerSpecificRoleGoal extends Goal {
                 break;
             }
         }
-        else if(prof == VillagerProfession.FISHERMAN) {
+        else if(MobAITweaks.getModConfigValue("villagers_can_fish") && prof == VillagerProfession.FISHERMAN) {
             if(mob.getAttacker() != null) {
                 stop();
                 return;
