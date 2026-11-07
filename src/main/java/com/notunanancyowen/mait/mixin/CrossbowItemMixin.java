@@ -12,6 +12,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.RangedWeaponItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Unit;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,13 +22,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(CrossbowItem.class)
 public abstract class CrossbowItemMixin extends RangedWeaponItem {
-    @Unique private int autoReloadTime = 0;
     public CrossbowItemMixin(Settings settings) {
         super(settings);
     }
     @Inject(method = "createArrowEntity", at = @At("RETURN"), cancellable = true)
     private void replaceArrowWithSomethingElse(World world, LivingEntity shooter, ItemStack weaponStack, ItemStack projectileStack, boolean critical, CallbackInfoReturnable<ProjectileEntity> cir) {
-        if(cir.getReturnValue() != null) weaponStack.getEnchantments().getEnchantments().forEach(e -> {
+        if(cir.getReturnValue() != null && MobAITweaks.getModConfigValue("enchantments_from_mod")) weaponStack.getEnchantments().getEnchantments().forEach(e -> {
             if(e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "withering_munitions"))) {
                 WitherSkullEntity skull = new WitherSkullEntity(world, shooter, cir.getReturnValue().getVelocity());
                 if(shooter instanceof MobEntity mob && mob.getTarget() != null) skull.setVelocity(mob.getTarget().getEyePos().subtract(cir.getReturnValue().getPos()).normalize().multiply(skull.getVelocity().length()));
@@ -39,6 +39,7 @@ public abstract class CrossbowItemMixin extends RangedWeaponItem {
             }
             if(e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "featherweight_munitions"))) {
                 cir.getReturnValue().setNoGravity(true);
+                if(cir.getReturnValue() instanceof PersistentProjectileEntity p) p.getItemStack().set(MobAITweaks.IGNORES_WATER, Unit.INSTANCE);
                 if(shooter instanceof MobEntity mob && mob.getTarget() != null) cir.getReturnValue().setVelocity(mob.getTarget().getEyePos().subtract(cir.getReturnValue().getPos()).normalize().multiply(cir.getReturnValue().getVelocity().length()));
             }
         });
@@ -50,17 +51,24 @@ public abstract class CrossbowItemMixin extends RangedWeaponItem {
     }
     @Inject(method = "usageTick", at = @At("TAIL"))
     private void fullAuto(World world, LivingEntity user, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
-        if(world.isClient() || CrossbowItem.isCharged(stack) || stack.getEnchantments().getEnchantments().stream().noneMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "full_auto_retrofit")))) return;
+        if(world.isClient() || CrossbowItem.isCharged(stack) || !MobAITweaks.getModConfigValue("enchantments_from_mod") || stack.getEnchantments().getEnchantments().stream().noneMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "full_auto_retrofit")))) return;
         onStoppedUsing(stack, world, user, remainingUseTicks);
         if(CrossbowItem.getPullTime(stack, user) >= getMaxUseTime(stack, user) && CrossbowItem.isCharged(stack)) user.clearActiveItem();
     }
     @Inject(method = "loadProjectiles", at = @At("HEAD"))
     private static void fullAuto(LivingEntity shooter, ItemStack crossbow, CallbackInfoReturnable<Boolean> cir) {
-        if(crossbow.getEnchantments().getEnchantments().stream().anyMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "full_auto_retrofit"))) && shooter.isUsingItem()) shooter.clearActiveItem();
+        if(MobAITweaks.getModConfigValue("enchantments_from_mod") && crossbow.getEnchantments().getEnchantments().stream().anyMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "full_auto_retrofit"))) && shooter.isUsingItem()) shooter.clearActiveItem();
     }
     @Override public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if(entity instanceof PlayerEntity player && !world.isClient() && !selected && !CrossbowItem.isCharged(stack) && stack.getEnchantments().getEnchantments().stream().anyMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "auto_loading_holster")))) if(++autoReloadTime > stack.getMaxUseTime(player)) stack.onStoppedUsing(world, player, autoReloadTime = 0);
-        else stack.usageTick(world, player, autoReloadTime);
+        if(!world.isClient()) if(entity instanceof PlayerEntity player && !selected && !CrossbowItem.isCharged(stack) && MobAITweaks.getModConfigValue("enchantments_from_mod")) if(stack.getEnchantments().getEnchantments().stream().anyMatch(e -> e.matchesId(Identifier.of(MobAITweaks.MOD_ID, "auto_loading_holster")))) {
+            if(!stack.contains(MobAITweaks.AUTO_RELOAD_TIME)) stack.set(MobAITweaks.AUTO_RELOAD_TIME, 0);
+            int autoReloadTime = stack.get(MobAITweaks.AUTO_RELOAD_TIME) instanceof Integer i ? i : 0;
+            if(++autoReloadTime >= stack.getMaxUseTime(player)) stack.onStoppedUsing(world, player, autoReloadTime = 0);
+            else stack.usageTick(world, player, autoReloadTime);
+            stack.set(MobAITweaks.AUTO_RELOAD_TIME, autoReloadTime);
+        }
+        else stack.remove(MobAITweaks.AUTO_RELOAD_TIME);
+        else stack.remove(MobAITweaks.AUTO_RELOAD_TIME);
         super.inventoryTick(stack, world, entity, slot, selected);
     }
 }
