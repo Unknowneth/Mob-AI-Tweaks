@@ -30,6 +30,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
@@ -127,7 +128,7 @@ public abstract class EnderDragonEntityMixin extends MobEntity implements Monste
         }
         ci.cancel();
     }
-    @Inject(method = "damagePart", at = @At("HEAD"), cancellable = true)
+    /*@Inject(method = "damagePart", at = @At("HEAD"), cancellable = true, require = 0)
     private void damageBodyParts(EnderDragonPart part, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if(source.getAttacker() == this || source.getSource() == this) cir.setReturnValue(false);
         else if(MobAITweaks.getModConfigValue("bosses_enrage") && !getPhaseManager().getCurrent().getType().equals(PhaseType.DYING) && !part.equals(body) && getHealth() > 1f && (source.isOf(DamageTypes.BAD_RESPAWN_POINT) || (!source.isOf(DamageTypes.OUT_OF_WORLD) && !source.isOf(DamageTypes.OUTSIDE_BORDER) && !source.isOf(DamageTypes.GENERIC_KILL) && !source.isOf(DamageTypes.CRAMMING) && amount >= getMaxHealth() * 0.1f)) && !isEnraged()) {
@@ -135,10 +136,17 @@ public abstract class EnderDragonEntityMixin extends MobEntity implements Monste
             if(getServer() != null && getServer().getPlayerManager() != null) getServer().getPlayerManager().broadcast(Text.translatable("mob-ai-tweaks.boss_enraged").copy().formatted(Formatting.RED), false);
         }
         if(MobAITweaks.getModConfigValue("ender_dragon_healing_rework") && isDPS() && getPhaseManager().getCurrent() != PhaseType.DYING) cir.setReturnValue(parentDamage(source, amount * (part.equals(body) ? 0.2F : part.equals(head) ? 0.8F : 0.5F)));
-    }
+    }*/
     @Inject(method = "crystalDestroyed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/boss/dragon/EnderDragonEntity;damagePart(Lnet/minecraft/entity/boss/dragon/EnderDragonPart;Lnet/minecraft/entity/damage/DamageSource;F)Z"))
     private void progressDPS(EndCrystalEntity endCrystal, BlockPos pos, DamageSource source, CallbackInfo ci) {
-        if(MobAITweaks.getModConfigValue("ender_dragon_healing_rework")) getDataTracker().set(TIL_DPS, getDataTracker().get(TIL_DPS) - 1);
+        if(MobAITweaks.getModConfigValue("ender_dragon_healing_rework")) {
+            int i = getDataTracker().get(TIL_DPS) - 1;
+            getDataTracker().set(TIL_DPS, i);
+            if(MobAITweaks.getModConfigValue("ender_dragon_announcements") && getWorld() instanceof ServerWorld server) server.getPlayers().forEach(p -> {
+                if(p.getWorld().getDimensionEntry().matchesId(DimensionTypes.THE_END_ID)) p.sendMessage(Text.translatable("mob-ai-tweaks.ender_dragon." + (i == 0 ? "start_DPS_phase" : "hurt_from_crystals")), true);
+            });
+            MobAITweaks.LOGGER.info("Correct crystal destroyed, destroy " + i + " more to make the dragon perch!");
+        }
     }
     @SuppressWarnings("all")
     @Inject(method = "crystalDestroyed", at = @At("HEAD"))
@@ -152,6 +160,7 @@ public abstract class EnderDragonEntityMixin extends MobEntity implements Monste
         }
         if(MobAITweaks.getModConfigValue("ender_dragon_healing_rework")) if(endCrystal != null) {
             if(endCrystal.shouldShowBottom()) getDataTracker().set(CRYSTALS, getDataTracker().get(CRYSTALS) + endCrystal.getPos().toString());
+            MobAITweaks.LOGGER.info("Incorrect crystal destroyed. Destroy the ones healing the dragon, dammit!");
         }
         else getDataTracker().set(CRYSTALS, getDataTracker().get(CRYSTALS) + pos.toCenterPos().toString());
     }
@@ -192,6 +201,10 @@ public abstract class EnderDragonEntityMixin extends MobEntity implements Monste
                 String[] s4 = s3.split(",", 3);
                 if(s4.length != 3) {
                     MobAITweaks.LOGGER.info("Something went wrong trying to respawn one of the End Crystals, perhaps the NBT got messed up?");
+                    MobAITweaks.LOGGER.info("That or you're fighting the dragon wrong... Please set \"ender_dragon_healing_rework\" if you just can't figure it out.");
+                    if(getWorld() instanceof ServerWorld server) server.getPlayers().forEach(p -> {
+                        if(p.getWorld().getDimensionEntry().matchesId(DimensionTypes.THE_END_ID)) p.sendMessage(Text.translatable("mob-ai-tweaks.ender_dragon.respawn_crystals"), true);
+                    });
                     continue;
                 }
                 EndCrystalEntity crystal = EntityType.END_CRYSTAL.create(getWorld());
