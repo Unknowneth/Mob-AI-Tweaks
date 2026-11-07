@@ -1,5 +1,7 @@
 package com.notunanancyowen.mait.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.notunanancyowen.mait.MobAITweaks;
 import com.notunanancyowen.mait.goals.VillagerEatItemToHealGoal;
 import com.notunanancyowen.mait.goals.VillagerSpecificRoleGoal;
@@ -60,10 +62,11 @@ public abstract class VillagerEntityMixin extends MerchantEntity {
         super.onKilledBy(adversary);
         if(MobAITweaks.getModConfigValue("pillagers_eat_food") && adversary instanceof PillagerEntity pillager) for(int i = 0; i < getInventory().size(); i++) pillager.getInventory().addStack(getInventory().getStack(i));
     }
-    @Redirect(method = "mobTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ai/brain/Brain;tick(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/LivingEntity;)V"))
-    private void suppressBrainWhileUsingSpecificGoal(Brain<LivingEntity> instance, ServerWorld world, LivingEntity entity) {
+
+    @WrapOperation(method = "mobTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ai/brain/Brain;tick(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/LivingEntity;)V"))
+    private void suppressBrainWhileUsingSpecificGoal(Brain<LivingEntity> instance, ServerWorld world, LivingEntity entity, Operation<Void> original) {
         if(goalSelector.getGoals().stream().noneMatch(p -> p.getGoal() instanceof VillagerSpecificRoleGoal v && v.shouldRunEveryTick() && p.isRunning())) {
-            instance.tick(world, entity);
+            original.call(instance, world, entity);
             if(servicesDone < MobAITweaks.getModConfigValue("villagers_max_special_services", 12) && !getMainHandStack().isEmpty()) instance.getOptionalRegisteredMemory(MemoryModuleType.NEAREST_VISIBLE_TARGETABLE_PLAYER).ifPresent(player -> {
                 if(player.isSneaking() && !player.isCreative()) {
                     VillagerProfession prof = getVillagerData().getProfession();
