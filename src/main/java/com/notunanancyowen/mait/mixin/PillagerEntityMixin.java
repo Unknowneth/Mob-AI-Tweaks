@@ -159,13 +159,29 @@ public abstract class PillagerEntityMixin extends IllagerEntity implements Cross
             MobAITweaks.LOGGER.info("Silently caught \"" + e.getMessage() + "\" error at PillagerEntityMixin.shoot(LivingEntity, float), ignore this");
         }
     }
-    @Override public State getState() {
-        if(isCelebrating()) return State.CELEBRATING;
-        else if(getMainHandStack().getItem().getClass().getSimpleName().contains("Gun") || getMainHandStack().getItem().getClass().getSuperclass().getSimpleName().contains("Gun")) return State.CROSSBOW_HOLD;
-        else if(getMainHandStack().getItem() instanceof CrossbowItem) return isCharging() ? State.CROSSBOW_CHARGE : State.CROSSBOW_HOLD;
-        else if(isAttacking()) if(getMainHandStack().getItem() instanceof BowItem) return State.BOW_AND_ARROW;
-        else return State.ATTACKING;
-        return isUsingItem() ? State.CROSSBOW_HOLD : State.NEUTRAL;
+    @Inject(method = "getState", at = @At("HEAD"), cancellable = true)
+    private void animationChange(CallbackInfoReturnable<State> cir) {
+        if(isCelebrating()) {
+            cir.setReturnValue(State.CELEBRATING);
+            return;
+        }
+        else if(getMainHandStack().getItem().getClass().getSimpleName().contains("Gun") || getMainHandStack().getItem().getClass().getSuperclass().getSimpleName().contains("Gun")) {
+            cir.setReturnValue(State.CROSSBOW_HOLD);
+            return;
+        }
+        else if(getMainHandStack().getItem() instanceof CrossbowItem) {
+            cir.setReturnValue(isCharging() ? State.CROSSBOW_CHARGE : State.CROSSBOW_HOLD);
+            return;
+        }
+        else if(isAttacking()) if(getMainHandStack().getItem() instanceof BowItem) {
+            cir.setReturnValue(State.BOW_AND_ARROW);
+            return;
+        }
+        else {
+            cir.setReturnValue(State.ATTACKING);
+            return;
+        }
+        cir.setReturnValue(isUsingItem() ? State.CROSSBOW_HOLD : State.NEUTRAL);
     }
     @Override public boolean canPickupItem(ItemStack stack) {
         if(stack.getComponents() != null && (stack.getComponents().get(DataComponentTypes.FOOD) != null || stack.getComponents().get(DataComponentTypes.TOOL) != null || stack.getComponents().get(DataComponentTypes.FIREWORKS) != null)) return true;
