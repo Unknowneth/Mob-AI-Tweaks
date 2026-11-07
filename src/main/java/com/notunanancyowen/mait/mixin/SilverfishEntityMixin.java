@@ -60,7 +60,7 @@ public abstract class SilverfishEntityMixin extends HostileEntity implements Spe
                     return true;
                 }
                 @Override public boolean canStart() {
-                    if(getLastAttacker() == null || --hideCooldown > 0) return false;
+                    if(!getWorld().getGameRules().getBoolean(MobAITweaks.MOBS_ARE_OP) || getLastAttacker() == null || --hideCooldown > 0) return false;
                     int i = getSpecialCooldown();
                     int j = age - getLastAttackedTime();
                     return i >= 0 && j > 20 && j < 20 + MobAITweaks.getModConfigValue("silverfish_hide_duration", 200) && (isOnGround() || (i > 0 && (i < 8 || !isSprinting())));
