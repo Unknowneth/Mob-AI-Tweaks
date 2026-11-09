@@ -1,9 +1,13 @@
 package com.notunanancyowen.mait.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.notunanancyowen.mait.MobAITweaks;
 import com.notunanancyowen.mait.dataholders.SpecialAttacksInterface;
 import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
@@ -31,9 +35,11 @@ public abstract class LivingEntityRendererMixin {
             else if(entity.isFrozen()) cir.setReturnValue(ColorHelper.Argb.mixColor(ColorHelper.Argb.getArgb(255, 173, 216, 230), originalColor));
         }
     }
-    @ModifyConstant(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", constant = @Constant(intValue = -1))
-    private int becomeOrangeWhenBurningAndBlueWhenFreezing(int constant, LivingEntity entity) {
-        return !MobAITweaks.getModConfigValue("burn_and_freeze_visual_effects") ? constant : entity.isOnFire() && !entity.isFireImmune() ? ColorHelper.Argb.mixColor(ColorHelper.Argb.getArgb(255, 255, 165 ,0), constant) : entity.isFrozen() ? ColorHelper.Argb.mixColor(ColorHelper.Argb.getArgb(255, 173, 216, 230), constant) : constant;
+    @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
+    private void becomeOrangeWhenBurningAndBlueWhenFreezing(EntityModel<LivingEntity> instance, MatrixStack matrixStack, VertexConsumer vertexConsumer, int light, int overlay, int color, Operation<Void> original, LivingEntity entity) {
+        if(MobAITweaks.getModConfigValue("burn_and_freeze_visual_effects")) if(entity.isOnFire() && !entity.isFireImmune()) color = ColorHelper.Argb.mixColor(ColorHelper.Argb.getArgb(255, 255, 165 ,0), color);
+        else if(entity.isFrozen()) color = ColorHelper.Argb.mixColor(ColorHelper.Argb.getArgb(255, 173, 216, 230), color);
+        original.call(instance, matrixStack, vertexConsumer, light, overlay, color);
     }
     @Inject(method = "setupTransforms", at = @At("TAIL"))
     private void performCoolFlip(LivingEntity entity, MatrixStack matrices, float animationProgress, float bodyYaw, float tickDelta, float scale, CallbackInfo ci) {
